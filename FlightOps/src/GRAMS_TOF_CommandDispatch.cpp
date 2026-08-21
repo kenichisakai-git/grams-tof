@@ -881,17 +881,14 @@ GRAMS_TOF_CommandDispatch::GRAMS_TOF_CommandDispatch(
 
     // DUMMY_TEST
     table_[TOFCommandCode::DUMMY_TEST] = [&](const GRAMS_TOF_CommandDispatch::CommandArgs& argv) {
-        try {
+        return executeSimpleCommand(TOFCommandCode::DUMMY_TEST, [&]() {
             Logger::instance().info("[CommandDispatch] Handling dummy command for testing");
     
             // Optional: simulate some work
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
     
             return true; 
-        } catch (...) {
-            Logger::instance().error("[CommandDispatch] Exception in DUMMY_TEST");
-            return false; // signal failure
-        }
+        });
     };
 
     monitorRunning_ = true;
