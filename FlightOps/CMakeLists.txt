@@ -121,6 +121,7 @@ else()
     add_subdirectory(external/scripts_c)
     add_subdirectory(external/CLI11-2.2.0)
     add_subdirectory(external/shota)
+    add_subdirectory(daemon)
 
     if(INSTALL_KERNEL_MODULE)
         add_subdirectory(external/kernel)
