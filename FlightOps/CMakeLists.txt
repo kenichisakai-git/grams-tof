@@ -5,6 +5,8 @@ file(GLOB SOURCES "src/*.cpp")
 file(GLOB HEADERS "include/*.h")
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+find_package(PkgConfig REQUIRED)
+    pkg_check_modules(MOSQUITTO REQUIRED libmosquitto)
 
 ############################################################################################################
 # Platform-specific build control
@@ -61,7 +63,7 @@ else()
 
     add_executable(test_grams_tof_client_daq tools/test_grams_tof_client_daq.cpp)
     #target_link_libraries(test_grams_tof_client_daq PRIVATE GramsTofFlightOpsLib cli11 ncursesw)
-    target_link_libraries(test_grams_tof_client_daq PRIVATE GramsTofFlightOpsLib cli11 ncursesw tinfow)
+    target_link_libraries(test_grams_tof_client_daq PRIVATE GramsTofFlightOpsLib cli11 ncursesw tinfow ${MOSQUITTO_LIBRARIES})
  
     add_executable(test_grams_tof_config tools/test_grams_tof_config.cpp)
     target_link_libraries(test_grams_tof_config PRIVATE GramsTofFlightOpsLib)

@@ -16,6 +16,7 @@
 #include <fcntl.h>
 #include <iomanip>
 #include <condition_variable>
+#include <mosquitto.h>
 
 #include "GRAMS_TOF_CommandDefs.h"
 #include "GRAMS_TOF_CommandCodec.h"
@@ -35,6 +36,8 @@ std::condition_variable callbackCv;
 uint16_t activeTargetCode = 0;
 uint16_t lastFinishedCmd = 0;
 uint32_t lastCmdStatus = 0;
+
+struct mosquitto* g_mosq = nullptr;
 
 // ---------- Logging helper ----------
 void addLog(const std::string& msg) {
@@ -251,6 +254,24 @@ void eventServerThread(int port) {
                             }
                         }
 
+                        // --- MQTT Forwarding Logic ---
+                        // Forward telemetry packet (Histograms, Logs, etc.) directly to MQTT
+                        if (g_mosq) {
+                            auto wireData = GRAMS_TOF_CommandCodec::serialize(respPkt);
+                            int ret = mosquitto_publish(
+                                g_mosq,
+                                nullptr,
+                                "TOF_ground_telemetry",
+                                static_cast<int>(wireData.size()),
+                                wireData.data(),
+                                0,
+                                false
+                            );
+                            if (ret != MOSQ_ERR_SUCCESS) {
+                                addLog("[MQTT] Failed to publish packet to broker");
+                            }
+                        }
+
                         // Erase parsed packet length from the buffer
                         size_t parsedLen = GRAMS_TOF_CommandCodec::getPacketSize(respPkt);
                         if (parsedLen <= streamBuffer.size()) {
@@ -399,6 +420,17 @@ void heartbeatTask() {
 
 // ---------- Main ----------
 int main() {
+    // Initialize Mosquitto MQTT Library
+    mosquitto_lib_init();
+    g_mosq = mosquitto_new("DummyHub_Forwarder", true, nullptr);
+    if (g_mosq) {
+        if (mosquitto_connect(g_mosq, "localhost", 1883, 60) == MOSQ_ERR_SUCCESS) {
+            mosquitto_loop_start(g_mosq);
+        } else {
+            g_mosq = nullptr;
+        }
+    }
+
     initscr();
     cbreak();
     noecho();
@@ -445,7 +477,6 @@ int main() {
                 std::string msg = logQueue.front();
                 logQueue.pop();
 
-                // Adding the color for REMOTE-  ---
                 bool isRemoteLog = (msg.rfind("[REMOTE-", 0) == 0);
 
                 if (isRemoteLog && has_colors()) {
@@ -455,7 +486,6 @@ int main() {
                 } else {
                     wprintw(logWin, "%s\n", msg.c_str());
                 }
-                // ---------------------------------------------------
             }
             wrefresh(logWin);
         }
@@ -530,6 +560,13 @@ int main() {
     tEvent.join();
     tHeartbeat.join();
     tPythonBridge.join();
+
+    // Cleanup Mosquitto
+    if (g_mosq) {
+        mosquitto_loop_stop(g_mosq, true);
+        mosquitto_destroy(g_mosq);
+    }
+    mosquitto_lib_cleanup();
 
     delwin(logWin);
     delwin(inputWin);
