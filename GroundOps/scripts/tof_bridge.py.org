@@ -78,10 +78,8 @@ def insert_log_to_db(run_number, timestamp_ms, level, level_str, component, mess
 
 # --- Handlers ---
 def handle_log_stream(payload):
-    if len(payload) < 50:
-        return
-
-    argv_data = payload[8:-6]
+    # Parse argv (uint32 array) starting after command packet header (8 bytes offset)
+    argv_data = payload[8:-6] # Exclude 8-byte packet header & 6-byte tail (CRC + Footers)
     num_words = len(argv_data) // 4
     if num_words < 9:
         return
@@ -93,16 +91,15 @@ def handle_log_stream(payload):
     level = argv[3] & 0xFF
     msg_len = argv[4]
 
-    comp_raw = struct.pack('>4I', argv[5], argv[6], argv[7], argv[8])
-    comp_bytes = b"".join([comp_raw[i:i+4][::-1] for i in range(0, 16, 4)])
+    # Component tag (words 5..8)
+    comp_bytes = struct.pack('>4I', argv[5], argv[6], argv[7], argv[8])
     component = comp_bytes.decode('utf-8', errors='ignore').rstrip('\x00')
 
+    # Message string (words 9..)
     if msg_len > 0 and len(argv) >= 9 + ((msg_len + 3) // 4):
         msg_words = argv[9 : 9 + ((msg_len + 3) // 4)]
-        msg_raw = struct.pack(f'>{len(msg_words)}I', *msg_words)
-        
-        fixed_msg_bytes = b"".join([msg_raw[i:i+4][::-1] for i in range(0, len(msg_raw), 4)])
-        message = fixed_msg_bytes[:msg_len].decode('utf-8', errors='ignore')
+        msg_bytes = struct.pack(f'>{len(msg_words)}I', *msg_words)[:msg_len]
+        message = msg_bytes.decode('utf-8', errors='ignore')
     else:
         message = ""
 
