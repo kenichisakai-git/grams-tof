@@ -247,6 +247,12 @@ void GRAMS_TOF_Config::copyOrLink(const std::string& srcPath, const std::string&
         symlink ? "symlink" : "copy"
     );
 
+    std::error_code ec;
+    if (fs::equivalent(src, dst, ec)) {
+        Logger::instance().debug("[Config] Source and destination are the same path. Skipping copyOrLink: {}", src.string());
+        return;
+    }
+
     if (!fs::exists(src)) throw GRAMS_TOF_RuntimeError("[Config] Source file does not exist: " + src.string());
 
     if (fs::exists(dst) || fs::is_symlink(dst)) {
@@ -258,6 +264,23 @@ void GRAMS_TOF_Config::copyOrLink(const std::string& srcPath, const std::string&
     } else {
         fs::copy_file(src, dst, fs::copy_options::overwrite_existing);
     }
+}
+
+void GRAMS_TOF_Config::linkVaultFileToOriginalDir(const std::string& vaultFilePath, const std::string& originalDir) const 
+{
+    namespace fs = std::filesystem;
+    fs::path srcPath(vaultFilePath);
+    
+    if (!fs::exists(srcPath)) return;
+
+    fs::path targetDir(originalDir);
+    if (!fs::exists(targetDir)) {
+        fs::create_directories(targetDir);
+    }
+
+    fs::path dstPath = targetDir / srcPath.filename();
+    
+    copyOrLink(srcPath.string(), dstPath.string(), true);
 }
 
 int GRAMS_TOF_Config::getInt(const std::string& section, const std::string& key) const {

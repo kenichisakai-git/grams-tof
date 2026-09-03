@@ -5,10 +5,15 @@ import os
 import sys
 
 # --- Environment Configuration ---
-db_host = os.getenv("TOF_MYSQL_HOST", "127.0.0.1")
-db_user = os.getenv("TOF_MYSQL_USER")
-db_pass = os.getenv("TOF_MYSQL_PASS")
-db_name = os.getenv("TOF_MYSQL_DB")
+#db_host = os.getenv("TOF_MYSQL_HOST", "127.0.0.1")
+#db_user = os.getenv("TOF_MYSQL_USER")
+#db_pass = os.getenv("TOF_MYSQL_PASS")
+#db_name = os.getenv("TOF_MYSQL_DB")
+db_host = os.getenv("PGRAMS_MYSQL_HOST", "localhost")
+db_port = int(os.getenv("PGRAMS_MYSQL_PORT", 3306))
+db_user = os.getenv("PGRAMS_MYSQL_USER")
+db_pass = os.getenv("PGRAMS_MYSQL_PASSWD")
+db_name = os.getenv("PGRAMS_MYSQL_DB")
 
 mq_host = os.getenv("PGRAMS_MOSQUITTO_HOST", "localhost")
 mq_port = int(os.getenv("PGRAMS_MOSQUITTO_PORT", 1883))
@@ -60,7 +65,7 @@ def insert_hist_to_db(run_num, hname, bins, h_type, nx, xmin, xmax, ny, ymin, ym
 def insert_log_to_db(run_number, timestamp_ms, level, level_str, component, message):
     try:
         conn = mysql.connector.connect(
-            host=db_host, user=db_user, password=db_pass, database=db_name
+            host=db_host, port=db_port, user=db_user, password=db_pass, database=db_name
         )
         cursor = conn.cursor()
 

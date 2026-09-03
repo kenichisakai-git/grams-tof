@@ -27,11 +27,13 @@ bool runTofQA_Iridium( const std::string& inputFile,
 	if( theChanConv->readActiveAsicList(asicListFile.c_str())!= TOF_GOOD ) return false;
 	auto activeConnIds_D = theChanConv->getActiveConnIdOnFebD();
 	
-	const int nb = 2;
+	//const int nb = 2;
+  const int nb = activeConnIds_D.size();
 
-	if( activeConnIds_D.size() != nb ) {
-		std::cerr << "[WARN] Number of Active Asic ConnectorID List != 2" << std::endl;
-	}
+  if( nb == 0 ) {
+     std::cerr << "[ERROR] No active Connector ID found on FebD!" << std::endl;
+     return false;
+   }
 
 	/// input stg2
 	TOF_TreeDataStg2* stg2 = new TOF_TreeDataStg2();
@@ -75,13 +77,14 @@ bool runTofQA_Iridium( const std::string& inputFile,
 		stg2->getEntry(i);
 
 		auto ts_pps   = stg2->getTimeStampPPS();
-		auto connID_D = stg2->getConnID_FebD();
-		auto connID_S = stg2->getConnID_FebS();
+		int connID_D = stg2->getConnID_FebD();
+		int connID_S = stg2->getConnID_FebS();
+
 
 		for( int j=0; j<nb; j++ )
 		{
-		  if( connID_D != activeConnIds_D[j] ) continue;
-			
+		  //if( connID_D != activeConnIds_D[j] ) continue;
+
 			hEvtChan[j]->Fill( connID_S, 1./ runTimeSec );
 			//hEvtChan[j]->Fill( connID_S );
 			hEvtTime[j]->Fill( ts_pps.AsDouble(), 1./(double)binW );

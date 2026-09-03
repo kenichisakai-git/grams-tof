@@ -17,9 +17,12 @@ logging.basicConfig(
     ]
 )
 
-db_user = os.getenv("TOF_MYSQL_USER")
-db_pass = os.getenv("TOF_MYSQL_PASS")
-db_name = os.getenv("TOF_MYSQL_DB")
+#db_user = os.getenv("TOF_MYSQL_USER")
+#db_pass = os.getenv("TOF_MYSQL_PASS")
+#db_name = os.getenv("TOF_MYSQL_DB")
+db_user = os.getenv("PGRAMS_MYSQL_USER")
+db_pass = os.getenv("PGRAMS_MYSQL_PASSWD")
+db_name = os.getenv("PGRAMS_MYSQL_DB")
 glib_path = os.getenv("GLIB")
 
 def setup():
