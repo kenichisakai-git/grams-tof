@@ -1,5 +1,5 @@
-
 #include "TOF_ConvertStg1toStg2.h"
+#include "GRAMS_TOF_Config.h"
 
 ClassImp( TOF_ConvertStg1toStg2 );
 
@@ -78,6 +78,15 @@ int TOF_ConvertStg1toStg2::addBranches_TSandConnID()
         cpuNsec %= 1000000000LL;
     }
 
+    double cal_time   = 0.0;
+		double cal_charge = 0.0;
+		if ( fCalib ) {
+			cal_time   = fCalib->getCalibratedTime_T(channelID, tacID, frameID, tCoarse, tFine);
+			cal_charge = fCalib->getEnergy(channelID, tacID, frameID, eCoarse, eFine, cal_time);
+		} else {
+			if(i == 0) std::cout << "[WARN] Calibration parameters are not loaded. Writing zeros to time/charge." << std::endl;
+		}
+
 		ts_cpu.SetSec( cpuSec );
 		ts_cpu.SetNanoSec( cpuNsec );
 
@@ -96,6 +105,8 @@ int TOF_ConvertStg1toStg2::addBranches_TSandConnID()
     fStg2->setECoarse     ( eCoarse   );
     fStg2->setTFine       ( tFine     );
     fStg2->setEFine       ( eFine     );
+    fStg2->setTime        ( cal_time   );
+    fStg2->setCharge      ( cal_charge );
 		fStg2->setTimeStampCPU( &ts_cpu    );
 		fStg2->setTimeStampPPS( &ts_pps    );
 
@@ -142,10 +153,19 @@ int TOF_ConvertStg1toStg2::addBranches_TSandConnID()
 
 
 
-void TOF_ConvertStg1toStg2::convertStg1ToStg2( const char* kPathStg1, const char* kPathStg2 )
+void TOF_ConvertStg1toStg2::convertStg1ToStg2( const char* kPathStg1, const char* kPathStg2, const char* calibDir )
 {
 	if( !fStg1 ) setClassStg1();
 	if( !fStg2 ) setClassStg2();
+
+  std::string calibPath = calibDir;
+  if( calibPath.empty() ) 
+    calibPath = GRAMS_TOF_Config::instance().getConfigDir();
+  loadCalibration( calibPath.c_str() );
+
+  if( strlen(calibDir) > 0 ) {
+		loadCalibration( calibDir );
+	}
 
 	if( fStg1->setInputPath( kPathStg1 ) != TOF_GOOD ) return;
 

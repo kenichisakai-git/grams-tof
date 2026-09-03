@@ -8,6 +8,7 @@
 #include "TOF_TreeDataStg1.h"
 #include "TOF_TreeDataStg2.h"
 #include "TOF_Constants.h"
+#include "TOF_TdcQdcCalibration.h"
 #include <iostream>
 
 #ifndef _TOF_CONVERTSTG1TOSTG2_H
@@ -31,11 +32,15 @@ class TOF_ConvertStg1toStg2 : public TObject
 			return theConvStg;
 		}
 
-    ~TOF_ConvertStg1toStg2() = default;
+    ~TOF_ConvertStg1toStg2() override {
+			if (fStg1) delete fStg1;
+			if (fStg2) delete fStg2;
+		}
 
 	private:
-		TOF_TreeDataStg1* fStg1{nullptr}; // input
-		TOF_TreeDataStg2* fStg2{nullptr}; // output
+		TOF_TreeDataStg1*      fStg1 {nullptr}; // input
+		TOF_TreeDataStg2*      fStg2 {nullptr}; // output
+    TOF_TdcQdcCalibration* fCalib{nullptr};
 		void setClassStg1();
 		void setClassStg2();
 
@@ -43,12 +48,21 @@ class TOF_ConvertStg1toStg2 : public TObject
 		int  setInputPathStg1( const char* fpath );
 		int  addBranches_TSandConnID();
 		//int  addConnIdBranches();
-		void convertStg1ToStg2( const char* kPathStg1, const char* kPathStg2="" );
+
+    int  loadCalibration( const char* fTdcCalib, const char* fQdcCalib ) {
+			fCalib = TOF_TdcQdcCalibration::getInstance();
+			return fCalib->readCalibrationFiles( fTdcCalib, fQdcCalib );
+		}
+		int  loadCalibration( const char* dirPath ) {
+			fCalib = TOF_TdcQdcCalibration::getInstance();
+			return fCalib->readCalibrationFiles( dirPath );
+		}
+
+    void convertStg1ToStg2( const char* kPathStg1, const char* kPathStg2="", const char* calibDir="" );
 		TOF_TreeDataStg1* getStg1() {return fStg1; };
 		TOF_TreeDataStg2* getStg2() {return fStg2; };
 
-	
-		ClassDef(TOF_ConvertStg1toStg2, 1)
+    ClassDefOverride(TOF_ConvertStg1toStg2, 2)	
 };
 
 #endif

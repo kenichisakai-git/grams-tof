@@ -36,17 +36,23 @@ class TOF_TreeDataStg2 : public TOF_TreeDataStg1
 		TTimeStamp* ts_pps{nullptr};
 		uint8_t     connID_febS;
 		uint8_t     connID_febD;
+    double      time  {0.0};
+    double      charge{0.0};
 	
 	public:
     TTimeStamp getTimeStampCPU() const { return *ts_cpu; };
     TTimeStamp getTimeStampPPS() const { return *ts_pps; };
 		uint8_t    getConnID_FebD()  const { return connID_febD; };
 		uint8_t    getConnID_FebS()  const { return connID_febS; };
+    double     getTime()         const { return time; }
+    double     getCharge()       const { return charge; }
 
     void setTimeStampCPU(const TTimeStamp* ts ){ if( ts ) *ts_cpu = *ts; };
     void setTimeStampPPS(const TTimeStamp* ts ){ if( ts ) *ts_pps = *ts; };
 		void setConnID_FebD (const uint8_t connID ){ connID_febD=connID; };
 		void setConnID_FebS (const uint8_t connID ){ connID_febS=connID; };
+    void setTime  ( double t ) { time = t;   }
+    void setCharge( double q ) { charge = q; }
 
 	ClassDefOverride(TOF_TreeDataStg2, 1)
 

@@ -33,7 +33,7 @@ int TOF_TreeDataStg1::setInputPath( const char* fpath )
 	std::cout << Form("[Info] Stg%d Input File: ", getStgNb()) << fpath << std::endl;
 
 	fTFile = new TFile( fpath, "read" );
-	fTTree = (TTree*) fTFile->Get( "data" );
+	fTTree = (TTree*) fTFile->Get( "ptree" );
 	if( !fTTree ) {
 		std::cerr<< Form( "[ERR] TTree does NOT exist in %s:", fpath ) << std::endl;
 		return TOF_ERR;
@@ -60,7 +60,7 @@ void TOF_TreeDataStg1::setBranchStatus( const char* bname, bool status )
 {
 	if(!fTTree ) {
 		std::cout<< Form("[WARN] Generate Stg%d TTree",getStgNb()) << std::endl;
-		fTTree = new TTree("data", "data");
+		fTTree = new TTree("ptree", "data");
 	}
 
 	fTTree->SetBranchStatus( bname, status );
@@ -70,7 +70,7 @@ void TOF_TreeDataStg1::setBranchAddress()
 {
 	if(!fTTree ) {
 		std::cout<< Form("[WARN] Generate Stg%d TTree", getStgNb()) << std::endl;
-		fTTree = new TTree("data", "data");
+		fTTree = new TTree("ptree", "data");
 	}
 
 	int status;
@@ -101,7 +101,7 @@ void TOF_TreeDataStg1::makeBranches()
 {
 	if(!fTTree ) {
 		std::cout<< Form("[WARN] Generate Stg%d TTree", getStgNb()) << std::endl;
-		fTTree = new TTree("data", "data");
+		fTTree = new TTree("ptree", "data");
 	}
 
 	fTTree->Branch("step1"    , &step1     );

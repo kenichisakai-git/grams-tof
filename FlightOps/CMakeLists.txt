@@ -32,13 +32,12 @@ else()
     target_link_libraries(GramsTofFlightOpsLib PUBLIC
         pybind11::embed
         Python3::Python
+        GramsTofCommonLib
         GramsTofDaqdLib
-        GramsTofInihLib
         GramsTofScriptsCLib
         GramsTofGroundOpsLib
         GramsTofAnalysisLib
         GramsTofAnalysisScriptsCLib
-        fmt::fmt
         rt
     )
 
@@ -111,15 +110,11 @@ else()
     install(DIRECTORY sh/               DESTINATION ${CMAKE_INSTALL_PREFIX}/sh)
     install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include/FlightOps)
 
-    add_library(GramsTofLoggerInclude INTERFACE)
-    target_include_directories(GramsTofLoggerInclude INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include) 
-
     # ----------------- External Libraries -----------------
     add_subdirectory(external/base)
     add_subdirectory(external/rawdata)
     add_subdirectory(external/daqd)
     add_subdirectory(external/pybind11)
-    add_subdirectory(external/inih)
     add_subdirectory(external/scripts_c)
     add_subdirectory(external/CLI11-2.2.0)
     add_subdirectory(external/shota)
@@ -128,13 +123,6 @@ else()
     if(INSTALL_KERNEL_MODULE)
         add_subdirectory(external/kernel)
     endif()
-
-    # ----------------- fmt Library -----------------
-    set(FMT_INSTALL ON CACHE BOOL "" FORCE)
-    set(FMT_STATIC ON CACHE BOOL "" FORCE)
-    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-    add_subdirectory(external/fmt-7.1.3)
-    set_target_properties(fmt PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 endif()
 
