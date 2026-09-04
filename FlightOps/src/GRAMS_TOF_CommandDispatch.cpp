@@ -375,7 +375,7 @@ GRAMS_TOF_CommandDispatch::GRAMS_TOF_CommandDispatch(
                     cfg.linkVaultFileToOriginalDir(generatedBaseline, originalCalibDir);
                     cfg.linkVaultFileToOriginalDir(outPathPrefix + "_noise.tsv", originalCalibDir);
 
-                    cfg.linkVaultFileToOriginalDir(generatedBaseline, stableConfigTarget);
+                    cfg.copyOrLink(generatedBaseline, stableConfigTarget, true);
                 }
             };
 
