@@ -319,9 +319,6 @@ GRAMS_TOF_CommandDispatch::GRAMS_TOF_CommandDispatch(
                 Logger::instance().error("[CommandDispatch] '{}' failed (rc={})", cmd, rc);
             }
 
-            Logger::instance().info("[CommandDispatch] Waiting 4 s after ad3_ctrl...");
-            std::this_thread::sleep_for(std::chrono::seconds(4));
-
             sendStatusCallback(TOFCommandCode::SEND_PULSE_TRAIN, success ? 0 : 1);
             return success;
         } catch (...) {
@@ -1035,9 +1032,9 @@ GRAMS_TOF_CommandDispatch::GRAMS_TOF_CommandDispatch(
                 TOFCommandCode::RESET_DAQ,
                 TOFCommandCode::READ_TEMPERATURE_SENSORS_SINGLE,
                 TOFCommandCode::ACQUIRE_THRESHOLD_CALIBRATION_D,
-                TOFCommandCode::SEND_PULSE_TRAIN,
                 TOFCommandCode::START_ASIC_TEMP_RECORD,
                 TOFCommandCode::ACQUIRE_SIPM_DATA,
+                TOFCommandCode::SEND_PULSE_TRAIN,
                 TOFCommandCode::STOP_ASIC_TEMP_RECORD,
                 TOFCommandCode::CONVERT_RAW_TO_RAW,
                 TOFCommandCode::CONVERT_STG1_TO_STG2,
@@ -1289,7 +1286,8 @@ bool GRAMS_TOF_CommandDispatch::executeMacroSequence(
         }
     }
 
-    for (auto cmd : sequence) {
+    for (size_t i = 0; i < sequence.size(); ++i) {
+        const auto cmd = sequence[i];
         if (!macroLoopRunning_) {
             Logger::instance().warn("[CommandDispatch][{}] Stop flag detected mid-sequence. Aborting.", macroName);
             if (!vaultSubDir.empty()) config.clearVaultPath();
@@ -1307,6 +1305,17 @@ bool GRAMS_TOF_CommandDispatch::executeMacroSequence(
 
         if (cmd == TOFCommandCode::RESET_DAQ) {
           macroLoopRunning_ = true;
+        }
+
+        // ACQUIRE_SIPM_DATA + SEND_PULSE_TRAIN
+        if (cmd == TOFCommandCode::ACQUIRE_SIPM_DATA && i + 1 < sequence.size() &&
+            sequence[i + 1] == TOFCommandCode::SEND_PULSE_TRAIN) {
+            ++i; // consume the SEND_PULSE_TRAIN step here
+            Logger::instance().info("[CommandDispatch][{}] Waiting 4 s after DAQ start before SEND_PULSE_TRAIN", macroName);
+            std::this_thread::sleep_for(std::chrono::seconds(4));
+            if (macroLoopRunning_ && !this->dispatch(TOFCommandCode::SEND_PULSE_TRAIN, {})) {
+                Logger::instance().error("[CommandDispatch][{}] SEND_PULSE_TRAIN failed. Continuing, DAQ is still running", macroName);
+            }
         }
 
         bool is_running = true;
